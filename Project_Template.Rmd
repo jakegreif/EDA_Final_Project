@@ -11,6 +11,8 @@ author: Your Name
 abstract: "Experimental overview. This section should be no longer than 250 words."
 fontsize: 12pt
 mainfont: Times New Roman
+editor_options: 
+  chunk_output_type: console
 ---
 
 <Information in these brackets are used for annotating the RMarkdown file. They will not appear in the final version of the PDF document>
@@ -42,6 +44,16 @@ colnames(stream.flow.explore) <- c("agency_cd", "site_no", "datetime",
                               "gage.height.min", "gage.height.min.approval", 
                               "gage.height.mean", "gage.height.mean.approval")
 View(stream.flow.explore)
+
+stream.flow.explore2 <- read.csv("../EDA_Final_Project/Data/USGS_Site08057000_Flow.csv")
+colnames(stream.flow.explore2) <- c("agency_cd", "site_no", "datetime", 
+                              "discharge.max", "discharge.max.approval", 
+                              "discharge.min", "discharge.min.approval", 
+                              "discharge.mean", "discharge.mean.approval", 
+                              "gage.height.max", "gage.height.max.approval", 
+                              "gage.height.min", "gage.height.min.approval", 
+                              "gage.height.mean", "gage.height.mean.approval")
+View(stream.flow.explore2)
 ```
 
 
