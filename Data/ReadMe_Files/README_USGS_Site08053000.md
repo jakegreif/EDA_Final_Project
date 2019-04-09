@@ -4,7 +4,7 @@
 ## Summary
 This dataset was prepared for Jake Greif's final project for Environmental Data Analytics (ENV 872L) at Duke University, Spring 2019
 
-The dataset contains streamflow data from the USGS streamflow gage site 08053000 (Elm Fork Trinity River near Lewisville, TX). 
+The dataset contains streamflow data from the USGS streamflow gage site 08049500 (West Fork Trinity River near Grand Prairie, TX). 
 
 ## Database Information
 Data were collected from the U.S. Geological Survey's Water Data website. More information can be found here: https://waterdata.usgs.gov/nwis
@@ -12,16 +12,16 @@ Data were collected from the U.S. Geological Survey's Water Data website. More i
 Data were collected using the Current Conditions tool on the USGS Water Data website (https://waterdata.usgs.gov/nwis).
 From the Current Conditions homepage, the following selections were made: 
 * Daily Stage and Streamflow (Predefined displays drop-down menu)
-* Elm Fk Trinity Rv (station name)
+* West Fk Trinity Rv (station name)
 * 08053000 (link on list)
 * Select discharge (check boxes)
-* Begin date: 1949-03-01 (begin date)
+* Begin date: 1925-04-01 (begin date)
 * End date: 2019-04-04 (end date)
 * Tab separated (radio button)
 
-csv file was saved as `USGS_Site08053000_Flow_Raw.csv`. 
+csv file was saved as `USGS_Site08049500_Flow_Raw.csv`. 
 
-Data were accessed 2019-04-05.
+Data were accessed 2019-04-09.
 
 ## Data Content Information 
 Gathered from waterdata.usgs.gov:
@@ -38,16 +38,16 @@ Gathered from waterdata.usgs.gov:
  Automated-retrieval info: https://help.waterdata.usgs.gov/faq/automated-retrievals
 
  Contact:   gs-w_support_nwisweb@usgs.gov
- retrieved: 2019-04-05 15:09:46 EDT       (vaww01)
+ retrieved: 2019-04-09 12:04:00 EDT       (caww02)
 
  Data for the following 1 site(s) are contained in this file
-    USGS 08053000 Elm Fk Trinity Rv nr Lewisville, TX
+    USGS 08049500 W Fk Trinity Rv at Grand Prairie, TX
 
- Data provided for site 08053000
+ Data provided for site 08049500
             TS   parameter     statistic     Description
-        133457       00060     00001     Discharge, cubic feet per second (Maximum)
-        133458       00060     00002     Discharge, cubic feet per second (Minimum)
-        133459       00060     00003     Discharge, cubic feet per second (Mean)
+        133233       00060     00001     Discharge, cubic feet per second (Maximum)
+        133234       00060     00002     Discharge, cubic feet per second (Minimum)
+        133235       00060     00003     Discharge, cubic feet per second (Mean)
 
  Data-value qualification codes included in this output:
         
