@@ -15,7 +15,7 @@ From the Current Conditions homepage, the following selections were made:
 * Trinity River (station name)
 * 08057000 (link on list)
 * Select discharge and gage height (check boxes)
-* Begin date: 1949-03-01 (begin date)
+* Begin date: 1925-04-01 (begin date)
 * End date: 2019-04-04 (end date)
 * Tab separated (radio button)
 
@@ -48,9 +48,6 @@ Gathered from waterdata.usgs.gov:
         133517       00060     00001     Discharge, cubic feet per second (Maximum), Radar
         133518       00060     00002     Discharge, cubic feet per second (Minimum), Radar
         133519       00060     00003     Discharge, cubic feet per second (Mean), Radar
-        133520       00065     00001     Gage height, feet (Maximum)
-        133521       00065     00002     Gage height, feet (Minimum)
-        133522       00065     00003     Gage height, feet (Mean)
 
  Data-value qualification codes included in this output:
         

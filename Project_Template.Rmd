@@ -129,6 +129,12 @@ head(westfork.raw)
 class(trinity.raw$datetime)
 class(westfork.raw$datetime)
 
+# Convert "datetime" class to date
+trinity.raw$datetime <- as.Date(trinity.raw$datetime, 
+                                               format = "%y%m%d")
+westfork.raw$datetime <- as.Date(westfork.raw$datetime, 
+                                               format = "%y%m%d")
+
 # Fix years before 1925
 trinity.raw$datetime <- format(trinity.raw$datetime, "%y%m%d")
 westfork.raw$datetime <- format(westfork.raw$datetime, "%y%m%d")
@@ -140,7 +146,7 @@ create.early.dates <- (function(d) {
 trinity.raw$datetime <- create.early.dates(trinity.raw$datetime)
 westfork.raw$datetime <- create.early.dates(westfork.raw$datetime)
 
-# Convert "datetime" class to date
+# Reformat dates
 trinity.raw$datetime <- as.Date(trinity.raw$datetime, 
                                                format = "%Y%m%d")
 westfork.raw$datetime <- as.Date(westfork.raw$datetime, 
