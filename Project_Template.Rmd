@@ -26,34 +26,25 @@ editor_options:
 \newpage
 
 <Setup the global options for the R chunks in your document>
+```{r}
+
+```
 
 <Note: set up autoreferencing for figures and tables in your document>
 
 ```{r setup, include=FALSE}
 # Set your working directory
+setwd("/Users/jakegreif/Environmental_Data_Analytics/EDA_Final_Project")
 
 # Load your packages
 library(tidyverse)
-# Set your ggplot theme
-stream.flow.explore <- read.csv("../Data/Raw/USGS_Site02085000_Flow_Raw.csv")
-colnames(stream.flow.explore) <- c("agency_cd", "site_no", "datetime", 
-                              "discharge.max", "discharge.max.approval", 
-                              "discharge.min", "discharge.min.approval", 
-                              "discharge.mean", "discharge.mean.approval", 
-                              "gage.height.max", "gage.height.max.approval", 
-                              "gage.height.min", "gage.height.min.approval", 
-                              "gage.height.mean", "gage.height.mean.approval")
-View(stream.flow.explore)
+library(ggplot2)
 
-stream.flow.explore2 <- read.csv("../EDA_Final_Project/Data/USGS_Site08057000_Flow.csv")
-colnames(stream.flow.explore2) <- c("agency_cd", "site_no", "datetime", 
-                              "discharge.max", "discharge.max.approval", 
-                              "discharge.min", "discharge.min.approval", 
-                              "discharge.mean", "discharge.mean.approval", 
-                              "gage.height.max", "gage.height.max.approval", 
-                              "gage.height.min", "gage.height.min.approval", 
-                              "gage.height.mean", "gage.height.mean.approval")
-View(stream.flow.explore2)
+# Set your ggplot theme
+mytheme <- theme_bw(base_size = 14) +
+  theme(strip.background = element_rect(fill = "white"))
+
+theme_set(mytheme)
 ```
 
 
@@ -61,13 +52,18 @@ View(stream.flow.explore2)
 
 <Paragraph detailing the rationale for your analysis. What is the significant application and/or interest in this topic? Connect to environmental topic(s)/challenge(s).>
 
+Across the country, the expected effects of climate change are being realized in the form of more intense precipitation events and dry periods. In North Texas, the city of Dallas is familiar with intense storms as it resides in a portion of the country where warm air from the Gulf of Mexico and cool air flowing down from the Rocky Mountains converge, producing dramatic storms. Though, the city is also accustomed to dry spells, particularly in the summer. Despite the famaliarity this region has with both hydrologic extremes, it has experienced particularly intense events in recent years. Therefore, this project will examine trends in the flow of the Trinity River in Dallas, TX. In particular, the analysis will attempt to determine if both high and low flow rates have become more prevalent in recent decades compared to discharges over the past centry.
+
 <Paragraph detailing your research question(s) and goals. What do you want to find out? Include a sentence (or a few) on the dataset you are using to answer this question - just enough to give your reader an idea of where you are going with the analysis.>
 
+Have discharges indicative of floods and droughts become more frequent in the Trinity river? To answer this question, data from USGS site 08057000 on the Trinity river in Dallas, TX will be analyzed. Specifically, the mean daily discharge at USGS site 08057000 will be characterized based on the frequency of occurance. As per USGS percentile thresholds, a discharge that falls above the 75th percentile is considered to be above normal, and a discharge that falls below the 25th percentile is considered below normal. Therefore, in the context of this analysis, a discharge above the 75th percentile is considered a "flood", and a discharge below the 25th percentile is considered a "drought." The goal of this analysis is to determine if recent extreme events are indicative of an emerging trend, as well as if the city's water supply may face more frequent threats from extreme events in the future.
 \newpage
 
 # Dataset Information
 
 <Information on how the dataset for this analysis were collected, the data contained in the dataset, and any important pieces of information that are relevant to your analyses. This section should contain much of same information as the README file for the dataset but formatted in a way that is more narrative.>
+
+
 
 <Add a table that summarizes your data structure. This table can be made in markdown text or inserted as a `kable` function in an R chunk. If the latter, do not include the code used to generate your table.>
 
@@ -76,6 +72,77 @@ View(stream.flow.explore2)
 # Exploratory Data Analysis and Wrangling
 
 <Include R chunks for 5+ lines of summary code (display code and output), 3+ exploratory graphs (display graphs only), and any wrangling you do to your dataset(s).> 
+
+
+```{r}
+## Data Wrangling & Exploration
+trinity.raw <- read.csv("../EDA_Final_Project/Data/Raw_Data/USGS_Site08057000_Flow_Raw.csv")
+westfork.raw <- read.csv("../EDA_Final_Project/Data/Raw_Data/USGS_Site08049500_Flow_Raw.csv")
+
+class(trinity.raw)
+class(westfork.raw)
+
+colnames(trinity.raw)
+colnames(westfork.raw)
+
+colnames(trinity.raw) <- c("agency_cd", "site_no", "datetime", 
+                              "discharge.max", "discharge.max.approval", 
+                              "discharge.min", "discharge.min.approval", 
+                              "discharge.mean", "discharge.mean.approval", 
+                              "gage.height.max", "gage.height.max.approval", 
+                              "gage.height.min", "gage.height.min.approval", 
+                              "gage.height.mean", "gage.height.mean.approval")
+colnames(westfork.raw) <- c("agency_cd", "site_no", "datetime", 
+                              "discharge.max", "discharge.max.approval", 
+                              "discharge.min", "discharge.min.approval", 
+                              "discharge.mean", "discharge.mean.approval")
+
+head(trinity.raw)
+head(westfork.raw)
+
+class(trinity.raw$datetime)
+class(elmfork.raw$datetime)
+
+# Fix years before 1925
+trinity.raw$datetime <- format(trinity.raw$datetime, "%y%m%d")
+elmfork.raw$datetime <- format(elmfork.raw$datetime, "%y%m%d")
+
+create.early.dates <- (function(d) {
+       paste0(ifelse(d > 190404,"19","20"),d)
+       })
+
+trinity.raw$datetime <- create.early.dates(trinity.raw$datetime)
+elmfork.raw$datetime <- create.early.dates(elmfork.raw$datetime)
+
+# Convert "datetime" class to date
+trinity.raw$datetime <- as.Date(trinity.raw$datetime, 
+                                               format = "%Y%m%d")
+elmfork.raw$datetime <- as.Date(elmfork.raw$datetime, 
+                                               format = "%Y%m%d")
+
+View(trinity.raw)
+View(elmfork.raw)
+
+trinity.flow <- select(trinity.raw, site_no, datetime, discharge.mean)
+elmfork.flow <- select(elmfork.raw, site_no, datetime, discharge.mean)
+```
+
+```{r}
+## Exploratory Graphs
+ggplot(trinity.flow) +
+  geom_point(aes(x = datetime, y = discharge.mean))
+
+ggplot(elmfork.flow) +
+  geom_point(aes(x = datetime, y = discharge.mean))
+
+ggplot(trinity.flow) +
+  geom_histogram(aes(x = discharge.mean), binwidth = 30)
+
+ggplot(elmfork.flow) +
+  geom_histogram(aes(x = discharge.mean), binwidth = 30)
+
+# (create box plots)
+```
 
 <Include text sections to accompany these R chunks to explain the reasoning behind your workflow, and the rationale for your approach.>
 
