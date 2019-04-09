@@ -39,6 +39,7 @@ setwd("/Users/jakegreif/Environmental_Data_Analytics/EDA_Final_Project")
 # Load your packages
 library(tidyverse)
 library(ggplot2)
+library(dplyr)
 
 # Set your ggplot theme
 mytheme <- theme_bw(base_size = 14) +
@@ -114,10 +115,7 @@ colnames(westfork.raw)
 colnames(trinity.raw) <- c("agency_cd", "site_no", "datetime", 
                               "discharge.max", "discharge.max.approval", 
                               "discharge.min", "discharge.min.approval", 
-                              "discharge.mean", "discharge.mean.approval", 
-                              "gage.height.max", "gage.height.max.approval", 
-                              "gage.height.min", "gage.height.min.approval", 
-                              "gage.height.mean", "gage.height.mean.approval")
+                              "discharge.mean", "discharge.mean.approval")
 colnames(westfork.raw) <- c("agency_cd", "site_no", "datetime", 
                               "discharge.max", "discharge.max.approval", 
                               "discharge.min", "discharge.min.approval", 
@@ -131,9 +129,9 @@ class(westfork.raw$datetime)
 
 # Convert "datetime" class to date
 trinity.raw$datetime <- as.Date(trinity.raw$datetime, 
-                                               format = "%y%m%d")
+                                               format = "%m/%d/%y")
 westfork.raw$datetime <- as.Date(westfork.raw$datetime, 
-                                               format = "%y%m%d")
+                                               format = "%m/%d/%y")
 
 # Fix years before 1925
 trinity.raw$datetime <- format(trinity.raw$datetime, "%y%m%d")
@@ -152,37 +150,69 @@ trinity.raw$datetime <- as.Date(trinity.raw$datetime,
 westfork.raw$datetime <- as.Date(westfork.raw$datetime, 
                                                format = "%Y%m%d")
 
-View(trinity.raw)
-View(westfork.raw)
 
-trinity.flow <- select(trinity.raw, site_no, datetime, discharge.mean)
-westfork.flow <- select(westfork.raw, site_no, datetime, discharge.mean)
+class(trinity.raw$site_no)
+class(westfork.raw$site_no)
+
+# Convert "site_no" class to character
+trinity.raw$site_no <- as.character(trinity.raw$site_no)
+westfork.raw$site_no <- as.character(westfork.raw$site_no)
+
+# Thin data to contain only mean discharge
+trinity.thinned <- select(trinity.raw, site_no, datetime, discharge.mean)
+westfork.thinned <- select(westfork.raw, site_no, datetime, discharge.mean)
+
+# Remove discharge mean NAs
+trinity.flow <- na.omit(trinity.thinned)
+westfork.flow <- na.omit(westfork.thinned)
+
+# Merge datasets
+all.flow.data <- merge(trinity.flow, westfork.flow, all = TRUE)
 ```
 
 ```{r}
 ## Exploratory Graphs
-ggplot(trinity.flow) +
-  geom_point(aes(x = datetime, y = discharge.mean))
+explore1 <- ggplot(NULL, aes(x = datetime, y = discharge.mean)) + 
+      geom_point(data = trinity.flow,
+                 color = "red", alpha = 0.5) +
+      geom_point(data = westfork.flow,
+                 color = "blue", alpha = 0.5)
 
-ggplot(westfork.flow) +
-  geom_point(aes(x = datetime, y = discharge.mean))
+explore2 <- ggplot(NULL, aes(x = datetime, y = discharge.mean)) + 
+      geom_smooth(data = trinity.flow,
+                 color = "red") +
+      geom_smooth(data = westfork.flow,
+                 color = "blue")
 
-ggplot(trinity.flow) +
-  geom_histogram(aes(x = discharge.mean), binwidth = 30)
+explore3 <- ggplot(NULL, aes(x = discharge.mean)) +
+  geom_histogram(data = trinity.flow, fill = "red") +
+  geom_histogram(data = westfork.flow, fill = "blue", alpha = 0.5) +
+  ylim(0,1500) +
+  xlim(0,20000)
+ 
+explore4 <- ggplot(all.flow.data) +
+  geom_boxplot(aes(x = site_no, y = discharge.mean)) +
+  ylim(0,2500)
 
-ggplot(westfork.flow) +
-  geom_histogram(aes(x = discharge.mean), binwidth = 30)
-
-# (create box plots)
+print(explore1)
+print(explore2)
+print(explore3)
+print(explore4)
 ```
 
 <Include text sections to accompany these R chunks to explain the reasoning behind your workflow, and the rationale for your approach.>
+
 
 
 \newpage
 
 # Analysis
 <Include R chunks for 3+ statistical tests (display code and output) and 3+ final visualization graphs (display graphs only).>
+```{r}
+# Determine extreme event thresholds
+quantile(trinity.flow$discharge.mean)
+quantile(westfork.flow$discharge.mean)
+```
 
 <Include text sections to accompany these R chunks to explain the reasoning behind your workflow, rationale for your approach, and the justification of meeting or failing to meet assumptions of tests.>
 

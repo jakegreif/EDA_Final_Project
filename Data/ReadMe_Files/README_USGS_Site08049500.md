@@ -13,7 +13,7 @@ Data were collected using the Current Conditions tool on the USGS Water Data web
 From the Current Conditions homepage, the following selections were made: 
 * Daily Stage and Streamflow (Predefined displays drop-down menu)
 * West Fk Trinity Rv (station name)
-* 08053000 (link on list)
+* 08049500 (link on list)
 * Select discharge (check boxes)
 * Begin date: 1925-04-01 (begin date)
 * End date: 2019-04-04 (end date)
