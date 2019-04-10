@@ -100,9 +100,8 @@ events are indicative of an emerging trend, as well as if...
 
 <Include R chunks for 5+ lines of summary code (display code and output), 3+ exploratory graphs (display graphs only), and any wrangling you do to your dataset(s).> 
 
-
 ```{r}
-## Data Wrangling & Exploration
+## Data Wrangling
 trinity.raw <- read.csv("../EDA_Final_Project/Data/Raw_Data/USGS_Site08057000_Flow_Raw.csv")
 westfork.raw <- read.csv("../EDA_Final_Project/Data/Raw_Data/USGS_Site08049500_Flow_Raw.csv")
 
@@ -150,25 +149,75 @@ trinity.raw$datetime <- as.Date(trinity.raw$datetime,
 westfork.raw$datetime <- as.Date(westfork.raw$datetime, 
                                                format = "%Y%m%d")
 
-
-class(trinity.raw$site_no)
-class(westfork.raw$site_no)
-
 # Convert "site_no" class to character
 trinity.raw$site_no <- as.character(trinity.raw$site_no)
 westfork.raw$site_no <- as.character(westfork.raw$site_no)
 
-# Thin data to contain only mean discharge
-trinity.thinned <- select(trinity.raw, site_no, datetime, discharge.mean)
-westfork.thinned <- select(westfork.raw, site_no, datetime, discharge.mean)
+# Separate "datetime" column
+trinity.raw <- separate(trinity.raw, datetime, c("Year", "Month", "Day"))
+westfork.raw <- separate(westfork.raw, datetime, c("Year", "Month", "Day"))
 
-# Remove discharge mean NAs
+# Thin data to contain only mean discharge
+trinity.thinned <- select(trinity.raw, site_no, Year, discharge.mean)
+westfork.thinned <- select(westfork.raw, site_no, Year, discharge.mean)
+
+# Remove "discharge.mean" NAs
 trinity.flow <- na.omit(trinity.thinned)
 westfork.flow <- na.omit(westfork.thinned)
 
 # Merge datasets
 all.flow.data <- merge(trinity.flow, westfork.flow, all = TRUE)
 ```
+
+```{r}
+# Create 'daynum' column in order to run Spearman's Rho test
+trinity.flow <- mutate(trinity.flow, daynum = 1:nrow(trinity.flow))
+westfork.flow <- mutate(westfork.flow, daynum = 1:nrow(westfork.flow))
+
+trinity.flow$daynum <- as.numeric(trinity.flow$daynum)
+westfork.flow$daynum <- as.numeric(westfork.flow$daynum)
+
+trinity.flow$daynum <- as.numeric(trinity.flow$daynum)
+westfork.flow$daynum <- as.numeric(westfork.flow$daynum)
+```
+
+Create new dataframes of flood/drought occurance by year for analysis
+```{r}
+# Determine extreme event thresholds
+quantile(trinity.flow$discharge.mean)
+quantile(westfork.flow$discharge.mean)
+
+# Create flood/drought data frames
+trinity.flood <- filter(trinity.flow, discharge.mean >= 1580)
+trinity.drought <- filter(trinity.flow, discharge.mean <= 250)
+westfork.flood <- filter(westfork.flow, discharge.mean >= 512.25)
+westfork.drought <- filter(westfork.flow, discharge.mean <= 115)
+
+# Create count column of frequency of extreme events by year
+trinity.flood.freq <- count(trinity.flood, "Year")
+trinity.drought.freq <- count(trinity.drought, "Year")
+westfork.flood.freq <- count(westfork.flood, "Year")
+westfork.drought.freq <- count(westfork.drought, "Year")
+
+# Append "site_no" column to frequency dataframes
+trinity.flood.freq$site_no <- c(08057000)
+trinity.drought.freq$site_no <- c(08057000)
+westfork.flood.freq$site_no <- c(08057000)
+westfork.drought.freq$site_no <- c(08057000)
+
+# Rearrange columns
+trinity.flood.freq <- select(trinity.flood.freq, site_no, Year, freq)
+trinity.drought.freq <- select(trinity.drought.freq, site_no, Year, freq)
+westfork.flood.freq <- select(westfork.flood.freq, site_no, Year, freq)
+westfork.drought.freq <- select(westfork.drought.freq, site_no, Year, freq)
+
+# Make "Year" class numeric
+trinity.flood.freq$Year <- as.numeric(trinity.flood.freq$Year)
+trinity.drought.freq$Year <- as.numeric(trinity.drought.freq$Year)
+westfork.flood.freq$Year <- as.numeric(westfork.flood.freq$Year)
+westfork.drought.freq$Year <- as.numeric(westfork.drought.freq$Year)
+```
+
 
 ```{r}
 ## Exploratory Graphs
@@ -192,12 +241,21 @@ explore3 <- ggplot(NULL, aes(x = discharge.mean)) +
  
 explore4 <- ggplot(all.flow.data) +
   geom_boxplot(aes(x = site_no, y = discharge.mean)) +
-  ylim(0,2500)
+  ylim(0,2000)
 
 print(explore1)
 print(explore2)
 print(explore3)
 print(explore4)
+
+ggplot(trinity.flood.freq) +
+  geom_point(aes(x = Year, y = freq))
+ggplot(trinity.drought.freq) +
+  geom_point(aes(x = Year, y = freq))
+ggplot(westfork.flood.freq) +
+  geom_point(aes(x = Year, y = freq))
+ggplot(westfork.drought.freq) +
+  geom_point(aes(x = Year, y = freq))
 ```
 
 <Include text sections to accompany these R chunks to explain the reasoning behind your workflow, and the rationale for your approach.>
@@ -209,9 +267,28 @@ print(explore4)
 # Analysis
 <Include R chunks for 3+ statistical tests (display code and output) and 3+ final visualization graphs (display graphs only).>
 ```{r}
-# Determine extreme event thresholds
-quantile(trinity.flow$discharge.mean)
-quantile(westfork.flow$discharge.mean)
+# Run single linear regression
+trinity.flood.trend <- lm(trinity.flood.freq$freq ~ trinity.flood.freq$Year)
+trinity.drought.trend <- lm(trinity.drought.freq$freq ~ trinity.drought.freq$Year)
+westfork.flood.trend <- lm(westfork.flood.freq$freq ~ westfork.flood.freq$Year)
+westfork.drought.trend <- lm(westfork.drought.freq$freq ~ westfork.drought.freq$Year)
+
+summary(trinity.flood.trend)
+summary(trinity.drought.trend)
+summary(westfork.flood.trend)
+summary(westfork.drought.trend)
+
+
+class(trini)
+# Run Spearman's Rho test (non-parametric)
+cor.test(trinity.flood.freq$freq, trinity.flood.freq$Year, 
+         method = "spearman", exact = FALSE)
+cor.test(trinity.drought.freq$freq, trinity.drought.freq$Year, 
+         method = "spearman", exact = FALSE)
+cor.test(westfork.flood.freq$freq, westfork.flood.freq$Year, 
+         method = "spearman", exact = FALSE)
+cor.test(westfork.drought.freq$freq, westfork.drought.freq$Year, 
+         method = "spearman", exact = FALSE)
 ```
 
 <Include text sections to accompany these R chunks to explain the reasoning behind your workflow, rationale for your approach, and the justification of meeting or failing to meet assumptions of tests.>
