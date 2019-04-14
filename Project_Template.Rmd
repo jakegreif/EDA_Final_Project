@@ -88,7 +88,9 @@ is considered to be above normal, and a discharge that falls below the
 of this analysis, a discharge above the 75th percentile is considered 
 a "flood", and a discharge below the 25th percentile is considered a 
 "drought." The goal of this analysis is to determine if recent extreme 
-events are indicative of an emerging trend, as well as if...
+events are indicative of an emerging trend, as well as if a larger,
+more regulated river (i.e.the Trinity River) has less frequent extreme
+discharge than a lower order tributary.
 \newpage
 
 # Dataset Information
@@ -325,15 +327,24 @@ pettitt.test(trinity.drought.freq$freq[40:61])
 pettitt.test(westfork.drought.freq$freq[39:66])
   # p < 0.05, change point @ row 44 (1969)
 
+# Second MK test for second change point
+mk.test(westfork.drought.freq$freq[39:43])
+mk.test(westfork.drought.freq$freq[44:66])
+  # p > 0.05 for both, no trends
+
 # Run Spearman's Rho test (non-parametric)
 cor.test(trinity.flood.freq$freq, trinity.flood.freq$Year, 
          method = "spearman", exact = FALSE)
+ # p < 0.05 (0.02), rho = 0.238, weak correlation
 cor.test(trinity.drought.freq$freq, trinity.drought.freq$Year, 
          method = "spearman", exact = FALSE)
+ # p < 0.05 (0.02), rho = -0.295, weak correlation
 cor.test(westfork.flood.freq$freq, westfork.flood.freq$Year, 
          method = "spearman", exact = FALSE)
+  # p < 0.05 (0.04), rho = 0.214, weak correlation
 cor.test(westfork.drought.freq$freq, westfork.drought.freq$Year, 
          method = "spearman", exact = FALSE)
+  # p < 0.05 (3.2^-10), rho = -0.681, strong correlation
 ```
 
 
@@ -350,5 +361,39 @@ cor.test(westfork.drought.freq$freq, westfork.drought.freq$Year,
 # Summary and Conclusions
 <Summarize your major findings from your analyses. What conclusions do you draw from your findings? Make sure to apply this to a broader application for the research question you have answered.>
 
+The discharge of rivers in the Dallas area show that the region is
+getting wetter over time. In both the Trinity River and the West Fork
+Trinity River, "droughts" have become less frequent, while "floods"
+have become more frequent. However, even though the Mann-Kendall tests
+revealed that these trends are indeed monotonic, none of the trends are
+particularlly strong. The strongest correlation between extreme
+discharge frequency and time were "drought" discharge conditions in the
+West Fork Trinity River, which can be characterized as a moderately
+strong negative trend based on the results of the Man-Kendall test
+(z = -5.75). The other Man-Kendall tests produced absolute z values no
+greater than 2.35, indiicating that while the trends are monotonic,
+they are relatively weak trends. 
 
+Pettitt's test was used to determine if any change points exist within
+the data. A change point is where the magnitude or direction of the
+trend changes in the data. The analysis found that in both rivers, a
+change point in "flood" discharges occurred in the 1980s, and the
+change point in the "drought" discharges occurred in 1964. The only
+significant trends before or after the change point were found in
+the "drought" datasets for both rivers, which experienced negative
+trends after 1964. Meaning, both the Trinity River and the West Fork
+Trinity River experienced less frequent "drought" discharges after
+1964. 
 
+The results of this analysis indicate that the Trinity River and it's
+tributary, the West Fork Trinity River, are experiencing similar trends
+in the frequency of extreme hydrologic events. However, the trends in
+the larger Trinity River are weaker overall than the West Fork Trinity
+River, particularlly in "drought" discharge frequency. Maintaing
+minimum flows in the Trinity River is much more important than
+controling flows in the West Fork Trinity River, considering the
+Trinity River is the largest river in the area and is used as a source
+of drinking water. The analysis confirms that recent extreme events in
+the Dallas area are indicative of an emerging trend. It also confirms
+that extreme discharge trends in a larger, more regulated river like
+the Trinity River are less intense than a lower order tributary.
