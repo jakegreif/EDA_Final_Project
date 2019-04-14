@@ -27,7 +27,9 @@ editor_options:
 
 <Setup the global options for the R chunks in your document>
 ```{r}
+library(GlobalOptions)
 
+#set_opt(warning=FALSE, )
 ```
 
 <Note: set up autoreferencing for figures and tables in your document>
@@ -40,10 +42,13 @@ setwd("/Users/jakegreif/Environmental_Data_Analytics/EDA_Final_Project")
 library(tidyverse)
 library(ggplot2)
 library(dplyr)
+library(gridExtra)
+library(trend)
 
 # Set your ggplot theme
 mytheme <- theme_bw(base_size = 14) +
-  theme(strip.background = element_rect(fill = "white"))
+  theme(strip.background = element_rect(fill = "white")) +
+  theme(plot.title = element_text(hjust=0.5))
 
 theme_set(mytheme)
 ```
@@ -100,7 +105,7 @@ events are indicative of an emerging trend, as well as if...
 
 <Include R chunks for 5+ lines of summary code (display code and output), 3+ exploratory graphs (display graphs only), and any wrangling you do to your dataset(s).> 
 
-```{r}
+```{r warning=FALSE, results='markup'}
 ## Data Wrangling
 trinity.raw <- read.csv("../EDA_Final_Project/Data/Raw_Data/USGS_Site08057000_Flow_Raw.csv")
 westfork.raw <- read.csv("../EDA_Final_Project/Data/Raw_Data/USGS_Site08049500_Flow_Raw.csv")
@@ -202,8 +207,8 @@ westfork.drought.freq <- count(westfork.drought, "Year")
 # Append "site_no" column to frequency dataframes
 trinity.flood.freq$site_no <- c(08057000)
 trinity.drought.freq$site_no <- c(08057000)
-westfork.flood.freq$site_no <- c(08057000)
-westfork.drought.freq$site_no <- c(08057000)
+westfork.flood.freq$site_no <- c(08049500)
+westfork.drought.freq$site_no <- c(08049500)
 
 # Rearrange columns
 trinity.flood.freq <- select(trinity.flood.freq, site_no, Year, freq)
@@ -221,41 +226,50 @@ westfork.drought.freq$Year <- as.numeric(westfork.drought.freq$Year)
 
 ```{r}
 ## Exploratory Graphs
-explore1 <- ggplot(NULL, aes(x = datetime, y = discharge.mean)) + 
-      geom_point(data = trinity.flow,
-                 color = "red", alpha = 0.5) +
-      geom_point(data = westfork.flow,
-                 color = "blue", alpha = 0.5)
-
-explore2 <- ggplot(NULL, aes(x = datetime, y = discharge.mean)) + 
-      geom_smooth(data = trinity.flow,
-                 color = "red") +
-      geom_smooth(data = westfork.flow,
-                 color = "blue")
-
-explore3 <- ggplot(NULL, aes(x = discharge.mean)) +
+explore1 <- ggplot(NULL, aes(x = discharge.mean)) +
   geom_histogram(data = trinity.flow, fill = "red") +
   geom_histogram(data = westfork.flow, fill = "blue", alpha = 0.5) +
   ylim(0,1500) +
   xlim(0,20000)
  
-explore4 <- ggplot(all.flow.data) +
+explore2 <- ggplot(all.flow.data) +
   geom_boxplot(aes(x = site_no, y = discharge.mean)) +
   ylim(0,2000)
 
 print(explore1)
 print(explore2)
-print(explore3)
-print(explore4)
 
-ggplot(trinity.flood.freq) +
-  geom_point(aes(x = Year, y = freq))
-ggplot(trinity.drought.freq) +
-  geom_point(aes(x = Year, y = freq))
-ggplot(westfork.flood.freq) +
-  geom_point(aes(x = Year, y = freq))
-ggplot(westfork.drought.freq) +
-  geom_point(aes(x = Year, y = freq))
+explore3 <- ggplot(trinity.flood.freq, aes(x = Year, y = freq)) +
+  geom_point() +
+  geom_smooth(method = lm) +
+  ylab("Frequency") +
+  ggtitle("Trinity River Flood Occurance") +
+  theme(plot.title = element_text(size = 12))
+
+explore4 <- ggplot(trinity.drought.freq, aes(x = Year, y = freq)) +
+  geom_point() +
+  geom_smooth(method = lm, color = "red") +
+  ylab("Frequency") +
+  ggtitle("Trinity River Drought Occurance") +
+  theme(plot.title = element_text(size = 12))
+
+explore5 <- ggplot(westfork.flood.freq, aes(x = Year, y = freq)) +
+  geom_point() +
+  geom_smooth(method = lm) +
+  scale_y_continuous(limits = c(0,250)) +
+  ylab("Frequency") +
+  ggtitle("West Fork Trinity River Flood Occurance") +
+  theme(plot.title = element_text(size = 12))
+
+explore6 <- ggplot(westfork.drought.freq, aes(x = Year, y = freq)) +
+  geom_point() +
+  geom_smooth(method = lm, color = "red") +
+  scale_y_continuous(limits = c(0,300)) +
+  ylab("Frequency") +
+  ggtitle("West Fork Trinity River Drought Occurance") +
+  theme(plot.title = element_text(size = 12)) 
+
+grid.arrange(explore3, explore4, explore5, explore6)
 ```
 
 <Include text sections to accompany these R chunks to explain the reasoning behind your workflow, and the rationale for your approach.>
@@ -267,19 +281,50 @@ ggplot(westfork.drought.freq) +
 # Analysis
 <Include R chunks for 3+ statistical tests (display code and output) and 3+ final visualization graphs (display graphs only).>
 ```{r}
-# Run single linear regression
-trinity.flood.trend <- lm(trinity.flood.freq$freq ~ trinity.flood.freq$Year)
-trinity.drought.trend <- lm(trinity.drought.freq$freq ~ trinity.drought.freq$Year)
-westfork.flood.trend <- lm(westfork.flood.freq$freq ~ westfork.flood.freq$Year)
-westfork.drought.trend <- lm(westfork.drought.freq$freq ~ westfork.drought.freq$Year)
+# Run Man-Kendall test to test for monotonic relationship
+mk.test(trinity.flood.freq$freq)
+  # p < 0.05, trend present (z = +2.21)
+mk.test(trinity.drought.freq$freq)
+  # p < 0.05, trend present (z = -2.35)
+mk.test(westfork.flood.freq$freq)
+  # p < 0.05, trend present (z = +2.13)
+mk.test(westfork.drought.freq$freq)
+  # p < 0.05, trend present (z = -5.75)
 
-summary(trinity.flood.trend)
-summary(trinity.drought.trend)
-summary(westfork.flood.trend)
-summary(westfork.drought.trend)
+# Run Pettitt's test 
+pettitt.test(trinity.flood.freq$freq)
+  # Change point @ row 56 (1980)
+pettitt.test(trinity.drought.freq$freq)
+  # Change point @ row 40 (1964)
+pettitt.test(westfork.flood.freq$freq)
+  # Change point @ row 64 (1988)
+pettitt.test(westfork.drought.freq$freq)
+  # Change point @ row 39 (1964)
 
+# Run separate Man-Kendall for each change point
+mk.test(trinity.flood.freq$freq[1:55])
+  # p > 0.05, no trend
+mk.test(trinity.flood.freq$freq[56:95])
+  # p > 0.05, no trend
+mk.test(trinity.drought.freq$freq[1:39])
+  # p > 0.05, no trend
+mk.test(trinity.drought.freq$freq[40:61])
+  # p < 0.05, trend present (z = -2.09)
+mk.test(westfork.flood.freq$freq[1:63])
+  # p > 0.05, no trend
+mk.test(westfork.flood.freq$freq[64:95])
+  # p > 0.05, no trend
+mk.test(westfork.drought.freq$freq[1:38])
+  # p > 0.05, no trend
+mk.test(westfork.drought.freq$freq[39:66])
+  # P < 0.05, trend present (z = -3.42)
 
-class(trini)
+# Test for second change point
+pettitt.test(trinity.drought.freq$freq[40:61])
+  # p > 0.05, no change point
+pettitt.test(westfork.drought.freq$freq[39:66])
+  # p < 0.05, change point @ row 44 (1969)
+
 # Run Spearman's Rho test (non-parametric)
 cor.test(trinity.flood.freq$freq, trinity.flood.freq$Year, 
          method = "spearman", exact = FALSE)
@@ -289,6 +334,12 @@ cor.test(westfork.flood.freq$freq, westfork.flood.freq$Year,
          method = "spearman", exact = FALSE)
 cor.test(westfork.drought.freq$freq, westfork.drought.freq$Year, 
          method = "spearman", exact = FALSE)
+```
+
+
+```{r}
+# Visualization Graphs
+
 ```
 
 <Include text sections to accompany these R chunks to explain the reasoning behind your workflow, rationale for your approach, and the justification of meeting or failing to meet assumptions of tests.>
