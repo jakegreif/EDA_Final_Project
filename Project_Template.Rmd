@@ -109,8 +109,10 @@ discharge than a lower order tributary.
 
 ```{r warning=FALSE, results='markup'}
 ## Data Wrangling
-trinity.raw <- read.csv("../EDA_Final_Project/Data/Raw_Data/USGS_Site08057000_Flow_Raw.csv")
-westfork.raw <- read.csv("../EDA_Final_Project/Data/Raw_Data/USGS_Site08049500_Flow_Raw.csv")
+trinity.raw <- 
+  read.csv("../EDA_Final_Project/Data/Raw_Data/USGS_Site08057000_Flow_Raw.csv")
+westfork.raw <- 
+  read.csv("../EDA_Final_Project/Data/Raw_Data/USGS_Site08049500_Flow_Raw.csv")
 
 class(trinity.raw)
 class(westfork.raw)
@@ -161,8 +163,10 @@ trinity.raw$site_no <- as.character(trinity.raw$site_no)
 westfork.raw$site_no <- as.character(westfork.raw$site_no)
 
 # Separate "datetime" column
-trinity.raw <- separate(trinity.raw, datetime, c("Year", "Month", "Day"))
-westfork.raw <- separate(westfork.raw, datetime, c("Year", "Month", "Day"))
+trinity.raw <- 
+  separate(trinity.raw, datetime, c("Year", "Month", "Day"))
+westfork.raw <- 
+  separate(westfork.raw, datetime, c("Year", "Month", "Day"))
 
 # Thin data to contain only mean discharge
 trinity.thinned <- select(trinity.raw, site_no, Year, discharge.mean)
@@ -213,10 +217,14 @@ westfork.flood.freq$site_no <- c(08049500)
 westfork.drought.freq$site_no <- c(08049500)
 
 # Rearrange columns
-trinity.flood.freq <- select(trinity.flood.freq, site_no, Year, freq)
-trinity.drought.freq <- select(trinity.drought.freq, site_no, Year, freq)
-westfork.flood.freq <- select(westfork.flood.freq, site_no, Year, freq)
-westfork.drought.freq <- select(westfork.drought.freq, site_no, Year, freq)
+trinity.flood.freq <- 
+  select(trinity.flood.freq, site_no, Year, freq)
+trinity.drought.freq <- 
+  select(trinity.drought.freq, site_no, Year, freq)
+westfork.flood.freq <- 
+  select(westfork.flood.freq, site_no, Year, freq)
+westfork.drought.freq <- 
+  select(westfork.drought.freq, site_no, Year, freq)
 
 # Make "Year" class numeric
 trinity.flood.freq$Year <- as.numeric(trinity.flood.freq$Year)
