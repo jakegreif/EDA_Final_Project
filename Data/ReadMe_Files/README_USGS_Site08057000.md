@@ -2,7 +2,7 @@
 
 
 ## Summary
-This dataset was prepared for Jake Greif's final project for Environmental Data Analytics (ENV 872L) at Duke University, Spring 2019
+This dataset was prepared for Jake Greif's final project for Environmental Data Analytics (ENV 872L) at Duke University, Spring 2019.
 
 The dataset contains streamflow data from the USGS streamflow gage site 08057000 (Trinity River at Dallas, TX). 
 

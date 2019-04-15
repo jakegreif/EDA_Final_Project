@@ -44,6 +44,7 @@ library(ggplot2)
 library(dplyr)
 library(gridExtra)
 library(trend)
+library(tidyselect)
 
 # Set your ggplot theme
 mytheme <- theme_bw(base_size = 14) +
@@ -97,9 +98,26 @@ discharge than a lower order tributary.
 
 <Information on how the dataset for this analysis were collected, the data contained in the dataset, and any important pieces of information that are relevant to your analyses. This section should contain much of same information as the README file for the dataset but formatted in a way that is more narrative.>
 
-
+The dataset used in the analysis was sourced from the U.S. Geological
+Survey's (USGS) Water Data website. While there is a collection of
+physical and chemical data available, the only data used for this
+analysis is average daily discharge (ft^3/s). The gauge sites used in
+the analysis were found using an interactive map on the USGS Water Data
+website, and were selected based on their proximity to the city of
+Dallas. The West Fork Trinity River was chosen as the representative
+tributary due the lack of development surrounding the river, as well as
+the lack of river control present upstream. After idenifying the gauge
+station number at both locations, the number was entered into the
+'Site Number' search bar. Then, the 'Discharge' check-box was selected
+and the years 1925-2019 were selected. 1925 was chosen as the start
+date based on the earliest available data for both datasets. Both
+datasets also contain maximum and minimum daily discharge, however that
+data is only available beginning in 1989 for the Trinity River, and in
+2001 for the West Fork Trinity River. Therefore, using the average
+daily discharge allowed the analysis to encompass a larger timeframe. 
 
 <Add a table that summarizes your data structure. This table can be made in markdown text or inserted as a `kable` function in an R chunk. If the latter, do not include the code used to generate your table.>
+
 
 \newpage
 
@@ -180,61 +198,83 @@ westfork.flow <- na.omit(westfork.thinned)
 all.flow.data <- merge(trinity.flow, westfork.flow, all = TRUE)
 ```
 
-```{r}
-# Create 'daynum' column in order to run Spearman's Rho test
-trinity.flow <- mutate(trinity.flow, daynum = 1:nrow(trinity.flow))
-westfork.flow <- mutate(westfork.flow, daynum = 1:nrow(westfork.flow))
-
-trinity.flow$daynum <- as.numeric(trinity.flow$daynum)
-westfork.flow$daynum <- as.numeric(westfork.flow$daynum)
-
-trinity.flow$daynum <- as.numeric(trinity.flow$daynum)
-westfork.flow$daynum <- as.numeric(westfork.flow$daynum)
-```
+The above R chunk contains code that wrangles and tidies the datasets.
+After the datasets are imported, the 
 
 Create new dataframes of flood/drought occurance by year for analysis
+
 ```{r}
 # Determine extreme event thresholds
 quantile(trinity.flow$discharge.mean)
 quantile(westfork.flow$discharge.mean)
 
 # Create flood/drought data frames
-trinity.flood <- filter(trinity.flow, discharge.mean >= 1580)
-trinity.drought <- filter(trinity.flow, discharge.mean <= 250)
-westfork.flood <- filter(westfork.flow, discharge.mean >= 512.25)
-westfork.drought <- filter(westfork.flow, discharge.mean <= 115)
+trinity.flood.freq <- trinity.flow %>%
+  filter(discharge.mean >= 1580) %>%
+  count("Year") %>%
+  mutate(site_no = 0805700) %>%
+  select(site_no, Year, freq) %>%
+  mutate(Year = as.numeric(Year))
+
+trinity.drought.freq <- trinity.flow %>%
+  filter(discharge.mean <= 250) %>%
+  count(Year) %>%
+  mutate(site_no = 0805700) %>%
+  select(site_no, Year, n) %>%
+  rename(n = freq) %>%
+  mutate(Year = as.numeric(Year))
+
+westfork.flood.freq <- westfork.flow %>%
+  filter(discharge.mean >= 512.25) %>%
+  count(Year) %>%
+  mutate(site_no = 0804950) %>%
+  select(site_no, Year, n) %>%
+  rename(n = freq) %>%
+  mutate(Year = as.numeric(Year))
+
+westfork.drought.freq <- westfork.flow %>%
+  filter(discharge.mean <= 115) %>%
+  count(Year) %>%
+  mutate(site_no = 0804950) %>%
+  select(site_no, Year, n) %>%
+  rename(n = freq) %>%
+  mutate(Year = as.numeric(Year))
+
+#trinity.flood <- filter(trinity.flow, discharge.mean >= 1580)
+#trinity.drought <- filter(trinity.flow, discharge.mean <= 250)
+#westfork.flood <- filter(westfork.flow, discharge.mean >= 512.25)
+#westfork.drought <- filter(westfork.flow, discharge.mean <= 115)
 
 # Create count column of frequency of extreme events by year
-trinity.flood.freq <- count(trinity.flood, "Year")
-trinity.drought.freq <- count(trinity.drought, "Year")
-westfork.flood.freq <- count(westfork.flood, "Year")
-westfork.drought.freq <- count(westfork.drought, "Year")
+#trinity.flood.freq <- count(trinity.flood, 'Year')
+#trinity.drought.freq <- count(trinity.drought, 'Year')
+#westfork.flood.freq <- count(westfork.flood, 'Year')
+#westfork.drought.freq <- count(westfork.drought, 'Year')
 
 # Append "site_no" column to frequency dataframes
-trinity.flood.freq$site_no <- c(08057000)
-trinity.drought.freq$site_no <- c(08057000)
-westfork.flood.freq$site_no <- c(08049500)
-westfork.drought.freq$site_no <- c(08049500)
+#trinity.flood.freq$site_no <- c(08057000)
+#trinity.drought.freq$site_no <- c(08057000)
+#westfork.flood.freq$site_no <- c(08049500)
+#westfork.drought.freq$site_no <- c(08049500)
 
 # Rearrange columns
-trinity.flood.freq <- 
-  select(trinity.flood.freq, site_no, Year, freq)
-trinity.drought.freq <- 
-  select(trinity.drought.freq, site_no, Year, freq)
-westfork.flood.freq <- 
-  select(westfork.flood.freq, site_no, Year, freq)
-westfork.drought.freq <- 
-  select(westfork.drought.freq, site_no, Year, freq)
+#trinity.flood.freq <- 
+#  select(trinity.flood.freq, site_no, Year, freq)
+#trinity.drought.freq <- 
+#  select(trinity.drought.freq, site_no, Year, freq)
+#westfork.flood.freq <- 
+ # select(westfork.flood.freq, site_no, Year, freq)
+#westfork.drought.freq <- 
+ # select(westfork.drought.freq, site_no, Year, freq)
 
 # Make "Year" class numeric
-trinity.flood.freq$Year <- as.numeric(trinity.flood.freq$Year)
-trinity.drought.freq$Year <- as.numeric(trinity.drought.freq$Year)
-westfork.flood.freq$Year <- as.numeric(westfork.flood.freq$Year)
-westfork.drought.freq$Year <- as.numeric(westfork.drought.freq$Year)
+#trinity.flood.freq$Year <- as.numeric(trinity.flood.freq$Year)
+#trinity.drought.freq$Year <- as.numeric(trinity.drought.freq$Year)
+#westfork.flood.freq$Year <- as.numeric(westfork.flood.freq$Year)
+#westfork.drought.freq$Year <- as.numeric(westfork.drought.freq$Year)
 ```
 
-
-```{r}
+```{r include = FALSE}
 ## Exploratory Graphs
 explore1 <- ggplot(NULL, aes(x = discharge.mean)) +
   geom_histogram(data = trinity.flow, fill = "red") +
@@ -359,6 +399,10 @@ cor.test(westfork.drought.freq$freq, westfork.drought.freq$Year,
 ```{r}
 # Visualization Graphs
 
+# 1. Trendline w/ break point floods 
+# 2. Trendline w/ break point droughts
+# 3. dot or violin plot? (to show similarity in frequnecy)
+  # OR plot post 1968 drought dot/violin to show that Trinity is more controlled
 ```
 
 <Include text sections to accompany these R chunks to explain the reasoning behind your workflow, rationale for your approach, and the justification of meeting or failing to meet assumptions of tests.>
