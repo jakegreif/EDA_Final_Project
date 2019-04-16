@@ -26,7 +26,7 @@ editor_options:
 \newpage
 
 ```{r include=FALSE}
-knitr::opts_chunk$set(fig.cap = "", fig.path = "Plot")
+#knitr::opts_chunk$set(fig.cap = "", fig.path = "Plot")
 ```
 
 <Note: set up autoreferencing for figures and tables in your document>
@@ -242,36 +242,36 @@ all.drought.data <- merge(trinity.drought.freq, westfork.drought.freq, all = TRU
 
 New dataframes of flood/drought occurance by year are created for the analysis. The top and bottom quartiles are determined for each gauge, and the dataframe is further refined in order to create the most simple dataset possible for the analysis.
 
-```{r Exploratory, include = FALSE, warning=FALSE, include=FALSE}
+```{r Exploratory, warning=FALSE, echo=FALSE}
 ## Exploratory Graphsj
-Figure1 <- ggplot(NULL, aes(x = discharge.mean)) +
+Fig1 <- ggplot(NULL, aes(x = discharge.mean)) +
   geom_histogram(data = trinity.flow, fill = "red") +
   geom_histogram(data = westfork.flow, fill = "blue", alpha = 0.5) +
   ylim(0,1500) +
   xlim(0,20000)
  
-Figure2 <- ggplot(all.flow.data) +
+Fig2 <- ggplot(all.flow.data) +
   geom_boxplot(aes(x = site_no, y = discharge.mean)) +
   ylim(0,2000)
 
-print(Figure1)
-print(Figure2)
+print(Fig1)
+print(Fig2)
 
-Figure3 <- ggplot(trinity.flood.freq, aes(x = Year, y = n)) +
+Fig3 <- ggplot(trinity.flood.freq, aes(x = Year, y = n)) +
   geom_point() +
   geom_smooth(method = lm) +
   ylab("Frequency") +
   ggtitle("Trinity River Flood Occurance") +
   theme(plot.title = element_text(size = 12))
 
-Figure4 <- ggplot(trinity.drought.freq, aes(x = Year, y = n)) +
+Fig4 <- ggplot(trinity.drought.freq, aes(x = Year, y = n)) +
   geom_point() +
   geom_smooth(method = lm, color = "red") +
   ylab("Frequency") +
   ggtitle("Trinity River Drought Occurance") +
   theme(plot.title = element_text(size = 12))
 
-Figure5 <- ggplot(westfork.flood.freq, aes(x = Year, y = n)) +
+Fig5 <- ggplot(westfork.flood.freq, aes(x = Year, y = n)) +
   geom_point() +
   geom_smooth(method = lm) +
   scale_y_continuous(limits = c(0,250)) +
@@ -279,7 +279,7 @@ Figure5 <- ggplot(westfork.flood.freq, aes(x = Year, y = n)) +
   ggtitle("West Fork Trinity River Flood Occurance") +
   theme(plot.title = element_text(size = 12))
 
-Figure6 <- ggplot(westfork.drought.freq, aes(x = Year, y = n)) +
+Fig6 <- ggplot(westfork.drought.freq, aes(x = Year, y = n)) +
   geom_point() +
   geom_smooth(method = lm, color = "red") +
   scale_y_continuous(limits = c(0,300)) +
@@ -287,7 +287,7 @@ Figure6 <- ggplot(westfork.drought.freq, aes(x = Year, y = n)) +
   ggtitle("West Fork Trinity River Drought Occurance") +
   theme(plot.title = element_text(size = 12)) 
 
-grid.arrange(Figure3, Figure4, Figure5, Figure6)
+grid.arrange(Fig3, Fig4, Fig5, Fig6)
 
 ```
 
@@ -363,11 +363,11 @@ cor.test(westfork.drought.freq$n, westfork.drought.freq$Year,
 
 First, a Mann_Kendall test was run to determine if the trends in discharge are monotonic. A Pettitt's test was then run on each dataset to see if there were any change points present, which could be indicative of increased river control and/or dramatic climatic changes. Because all four trends are monotonic, albeit weakly monotonic, a Spearman Rho's test was run to determine the strength of the correlation between the extreme hydrologic events and time. 
 
-```{r Visual, warning=FALSE, include=FALSE}
+```{r Visual, warning=FALSE, echo=FALSE}
 # Visualization Graphs
 
 # 1. Scatter plots of data with upper/lower 25% thresholds filled.
-Figure7 <- ggplot(trinity.raw, aes(x = datetime, y = discharge.mean)) +
+Fig7 <- ggplot(trinity.raw, aes(x = datetime, y = discharge.mean)) +
   geom_rect(xmin = as.Date("1925-01-01"), xmax = as.Date("2020-01-01"), 
       ymin = 0, ymax = 250, fill = "darkgoldenrod", alpha = 0.75) +
   geom_rect(xmin = as.Date("1925-01-01"), xmax = as.Date("2020-01-01"), 
@@ -383,9 +383,9 @@ Figure7 <- ggplot(trinity.raw, aes(x = datetime, y = discharge.mean)) +
   ggtitle("Trinity River Mean Daily Discharge") +
   theme(plot.title = element_text(size = 14))
 
-print(Figure7)
+print(Fig7)
 
-Figure8 <- ggplot(westfork.raw, aes(x = datetime, y = discharge.mean)) +
+Fig8 <- ggplot(westfork.raw, aes(x = datetime, y = discharge.mean)) +
   geom_rect(xmin = as.Date("1925-01-01"), xmax = as.Date("2020-01-01"), 
       ymin = 0, ymax = 115, fill = "darkgoldenrod", alpha = 0.75) +
   geom_rect(xmin = as.Date("1925-01-01"), xmax = as.Date("2020-01-01"), 
@@ -401,15 +401,15 @@ Figure8 <- ggplot(westfork.raw, aes(x = datetime, y = discharge.mean)) +
   ggtitle("West Fork Trinity River Mean Daily Discharge") +
   theme(plot.title = element_text(size = 12))
 
-print(Figure8)
+print(Fig8)
 ```
 Figures 1 and 2 visually dipict how  often the discharges of both rivers fall into the top and bottom quintiles, characterized as "Drought" for the bottom 25% and "Flood" for the top 25%. Both of the above figures were rescaled to better visualize the thresholds for flood and drought discharges for each river. 7,615 values above 2,000 were removed from Figure 2, and 6,645 values above 750 were removed from Figure 3.
 
-```{r warning=FALSE, include=FALSE}
+```{r Visual2, warning=FALSE, echo=FALSE}
 # Visualization graphs
 
 # 2. Trendline w/ break point floods 
-Figure9 <- ggplot(trinity.flood.freq, aes(x = Year, y = n)) +
+Fig9 <- ggplot(trinity.flood.freq, aes(x = Year, y = n)) +
   geom_point(position = position_jitter(height = 0L, seed = 1L),
       size = 0.5, color = "gray41", alpha = 0.25) +
   geom_linerange(aes(x=Year, ymin = 0, ymax = n),
@@ -425,7 +425,7 @@ Figure9 <- ggplot(trinity.flood.freq, aes(x = Year, y = n)) +
   ggtitle("Trinity River Flood Occurance") +
   theme(plot.title = element_text(size = 12))
 
-Figure10 <- ggplot(westfork.flood.freq, aes(x = Year, y = n)) +
+Fig10 <- ggplot(westfork.flood.freq, aes(x = Year, y = n)) +
   geom_point(position = position_jitter(height = 0L, seed = 1L),
       size = 0.5, color = "gray41", alpha = 0.25) +
   geom_linerange(aes(x=Year, ymin = 0, ymax = n),
@@ -440,10 +440,10 @@ Figure10 <- ggplot(westfork.flood.freq, aes(x = Year, y = n)) +
   ggtitle("West Fork Trinity River Flood Occurance") +
   theme(plot.title = element_text(size = 12))
 
-grid.arrange(Figure9, Figure10)
+grid.arrange(Fig9, Fig10)
 
 # 3. Trendline w/ break point droughts
-Figure11 <- ggplot(trinity.drought.freq, aes(x = Year, y = n)) +
+Fig11 <- ggplot(trinity.drought.freq, aes(x = Year, y = n)) +
   geom_point(position = position_jitter(height = 0L, seed = 1L),
       size = 0.5, color = "gray41", alpha = 0.25) +
   geom_linerange(aes(x=Year, ymin = 0, ymax = n),
@@ -459,7 +459,7 @@ Figure11 <- ggplot(trinity.drought.freq, aes(x = Year, y = n)) +
   ggtitle("Trinity River Drought Occurance") +
   theme(plot.title = element_text(size = 12))
 
-Figure12 <- ggplot(westfork.drought.freq, aes(x = Year, y = n)) +
+Fig12 <- ggplot(westfork.drought.freq, aes(x = Year, y = n)) +
   geom_point(position = position_jitter(height = 0L, seed = 1L),
       size = 0.5, color = "gray41", alpha = 0.25) +
   geom_linerange(aes(x=Year, ymin = 0, ymax = n),
@@ -475,7 +475,7 @@ Figure12 <- ggplot(westfork.drought.freq, aes(x = Year, y = n)) +
   ggtitle("West Fork Trinity River Drought Occurance") +
   theme(plot.title = element_text(size = 12))
 
-grid.arrange(Figure11, Figure12)
+grid.arrange(Fig11, Fig12)
 ```
 
 Figures 3 and 4 drive home the main takeaway from the analysis- "drought" discharges have decreased, and "flood" discharges have slightly increased over time in the Dallas area. Red dashed lines indicate change points, which provide additional information about when infrastructural or climatic changes began to really affect the surface water hydrology of the Dallas area.
@@ -483,7 +483,6 @@ Figures 3 and 4 drive home the main takeaway from the analysis- "drought" discha
 \newpage
 
 # Summary and Conclusions
-<Summarize your major findings from your analyses. What conclusions do you draw from your findings? Make sure to apply this to a broader application for the research question you have answered.>
 
 The discharge of rivers in the Dallas area show that the region is
 getting wetter over time. In both the Trinity River and the West Fork
