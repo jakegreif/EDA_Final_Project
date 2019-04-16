@@ -8,7 +8,7 @@ geometry: margin=2.54cm
 title: Experiment Title
 subtitle: Web address for GitHub repository
 author: Your Name
-abstract: "Experimental overview. This section should be no longer than 250 words."
+abstract: Across the country, the expected effects of climate change are being realized in the form of more intense precipitation events and dry periods. In North Texas, the city of Dallas is familiar with both types of extreme hydrologic events, and it has experienced particularly intense events in recent years. An analysis was conducted to determine if floods and droughts, defined as the top and bottom quartiles of daily average discharge, repsectively, have become more frequent in the Trinity River and a tributary near Dallas, TX. The results show that drought discharges have decreased, and flood discharges have slightly increased over time in the Dallas area, and that extreme discharge trends in a larger, more regulated river like the Trinity River are less intense than a lower order tributary.
 fontsize: 12pt
 mainfont: Times New Roman
 editor_options: 
@@ -25,16 +25,13 @@ editor_options:
 \listoffigures 
 \newpage
 
-<Setup the global options for the R chunks in your document>
-```{r}
-library(GlobalOptions)
-
-#set_opt(warning=FALSE, )
+```{r include=FALSE}
+knitr::opts_chunk$set(fig.cap = "", fig.path = "Plot")
 ```
 
 <Note: set up autoreferencing for figures and tables in your document>
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, warning=FALSE}
 # Set your working directory
 setwd("/Users/jakegreif/Environmental_Data_Analytics/EDA_Final_Project")
 
@@ -45,6 +42,9 @@ library(dplyr)
 library(gridExtra)
 library(trend)
 library(tidyselect)
+library(pacman)
+library(knitr)
+library()
 
 # Set your ggplot theme
 mytheme <- theme_bw(base_size = 14) +
@@ -56,8 +56,6 @@ theme_set(mytheme)
 
 
 # Research Question and Rationale
-
-<Paragraph detailing the rationale for your analysis. What is the significant application and/or interest in this topic? Connect to environmental topic(s)/challenge(s).>
 
 Across the country, the expected effects of climate change are being
 realized in the form of more intense precipitation events and dry
@@ -73,8 +71,6 @@ and a tributary of the Trinity River near Dallas, TX. In particular,
 the analysis will attempt to determine if extreme flow rates have 
 become more prevalent in recent decades compared to discharges over
 the past centry.
-
-<Paragraph detailing your research question(s) and goals. What do you want to find out? Include a sentence (or a few) on the dataset you are using to answer this question - just enough to give your reader an idea of where you are going with the analysis.>
 
 Have extreme discharge events become more frequent in the Dallas area?
 How do the frequency of extreme discharge events in higher and lower 
@@ -96,8 +92,6 @@ discharge than a lower order tributary.
 
 # Dataset Information
 
-<Information on how the dataset for this analysis were collected, the data contained in the dataset, and any important pieces of information that are relevant to your analyses. This section should contain much of same information as the README file for the dataset but formatted in a way that is more narrative.>
-
 The dataset used in the analysis was sourced from the U.S. Geological
 Survey's (USGS) Water Data website. While there is a collection of
 physical and chemical data available, the only data used for this
@@ -116,14 +110,15 @@ data is only available beginning in 1989 for the Trinity River, and in
 2001 for the West Fork Trinity River. Therefore, using the average
 daily discharge allowed the analysis to encompass a larger timeframe. 
 
-<Add a table that summarizes your data structure. This table can be made in markdown text or inserted as a `kable` function in an R chunk. If the latter, do not include the code used to generate your table.>
-
+agency_id   |  site_no     |  datetime    |  discharge.mean
+----------- |  ----------  |  ----------- |  ----------------
+USGS        |  8057000     |  1925-04-01  |  31.0
+USGS        |  8057000     |  1925-04-02  |  30.0
+USGS        |  8057000     |  1927-04-03  |  32.0
 
 \newpage
 
 # Exploratory Data Analysis and Wrangling
-
-<Include R chunks for 5+ lines of summary code (display code and output), 3+ exploratory graphs (display graphs only), and any wrangling you do to your dataset(s).> 
 
 ```{r warning=FALSE, results='markup'}
 ## Data Wrangling
@@ -181,14 +176,14 @@ trinity.raw$site_no <- as.character(trinity.raw$site_no)
 westfork.raw$site_no <- as.character(westfork.raw$site_no)
 
 # Separate "datetime" column
-trinity.raw <- 
+trinity.date <- 
   separate(trinity.raw, datetime, c("Year", "Month", "Day"))
-westfork.raw <- 
+westfork.date <- 
   separate(westfork.raw, datetime, c("Year", "Month", "Day"))
 
 # Thin data to contain only mean discharge
-trinity.thinned <- select(trinity.raw, site_no, Year, discharge.mean)
-westfork.thinned <- select(westfork.raw, site_no, Year, discharge.mean)
+trinity.thinned <- select(trinity.date, site_no, Year, discharge.mean)
+westfork.thinned <- select(westfork.date, site_no, Year, discharge.mean)
 
 # Remove "discharge.mean" NAs
 trinity.flow <- na.omit(trinity.thinned)
@@ -198,112 +193,85 @@ westfork.flow <- na.omit(westfork.thinned)
 all.flow.data <- merge(trinity.flow, westfork.flow, all = TRUE)
 ```
 
-The above R chunk contains code that wrangles and tidies the datasets.
-After the datasets are imported, the 
+The above R chunk contains code wrangles and tidies the datasets. After the datasets are imported, the dates are not formatted correctly and need to be converted to the proper class, as well as reformated to be usable for the analysis. The datsets are then refined to be in a useful format for the analysis.
 
-Create new dataframes of flood/drought occurance by year for analysis
-
-```{r}
+```{r warning=FALSE}
 # Determine extreme event thresholds
 quantile(trinity.flow$discharge.mean)
 quantile(westfork.flow$discharge.mean)
 
 # Create flood/drought data frames
-trinity.flood.freq <- trinity.flow %>%
-  filter(discharge.mean >= 1580) %>%
-  count("Year") %>%
-  mutate(site_no = 0805700) %>%
-  select(site_no, Year, freq) %>%
-  mutate(Year = as.numeric(Year))
-
-trinity.drought.freq <- trinity.flow %>%
-  filter(discharge.mean <= 250) %>%
-  count(Year) %>%
-  mutate(site_no = 0805700) %>%
-  select(site_no, Year, n) %>%
-  rename(n = freq) %>%
-  mutate(Year = as.numeric(Year))
-
-westfork.flood.freq <- westfork.flow %>%
-  filter(discharge.mean >= 512.25) %>%
-  count(Year) %>%
-  mutate(site_no = 0804950) %>%
-  select(site_no, Year, n) %>%
-  rename(n = freq) %>%
-  mutate(Year = as.numeric(Year))
-
-westfork.drought.freq <- westfork.flow %>%
-  filter(discharge.mean <= 115) %>%
-  count(Year) %>%
-  mutate(site_no = 0804950) %>%
-  select(site_no, Year, n) %>%
-  rename(n = freq) %>%
-  mutate(Year = as.numeric(Year))
-
-#trinity.flood <- filter(trinity.flow, discharge.mean >= 1580)
-#trinity.drought <- filter(trinity.flow, discharge.mean <= 250)
-#westfork.flood <- filter(westfork.flow, discharge.mean >= 512.25)
-#westfork.drought <- filter(westfork.flow, discharge.mean <= 115)
+trinity.flood <- filter(trinity.flow, discharge.mean >= 1580)
+trinity.drought <- filter(trinity.flow, discharge.mean <= 250)
+westfork.flood <- filter(westfork.flow, discharge.mean >= 512.25)
+westfork.drought <- filter(westfork.flow, discharge.mean <= 115)
 
 # Create count column of frequency of extreme events by year
-#trinity.flood.freq <- count(trinity.flood, 'Year')
-#trinity.drought.freq <- count(trinity.drought, 'Year')
-#westfork.flood.freq <- count(westfork.flood, 'Year')
-#westfork.drought.freq <- count(westfork.drought, 'Year')
+trinity.flood.freq <- count(trinity.flood, Year)
+trinity.drought.freq <- count(trinity.drought, Year)
+westfork.flood.freq <- count(westfork.flood, Year)
+westfork.drought.freq <- count(westfork.drought, Year)
 
 # Append "site_no" column to frequency dataframes
-#trinity.flood.freq$site_no <- c(08057000)
-#trinity.drought.freq$site_no <- c(08057000)
-#westfork.flood.freq$site_no <- c(08049500)
-#westfork.drought.freq$site_no <- c(08049500)
+trinity.flood.freq$site_no <- c(08057000)
+trinity.drought.freq$site_no <- c(08057000)
+westfork.flood.freq$site_no <- c(08049500)
+westfork.drought.freq$site_no <- c(08049500)
 
 # Rearrange columns
-#trinity.flood.freq <- 
-#  select(trinity.flood.freq, site_no, Year, freq)
-#trinity.drought.freq <- 
-#  select(trinity.drought.freq, site_no, Year, freq)
-#westfork.flood.freq <- 
- # select(westfork.flood.freq, site_no, Year, freq)
-#westfork.drought.freq <- 
- # select(westfork.drought.freq, site_no, Year, freq)
+trinity.flood.freq <- 
+  select(trinity.flood.freq, site_no, Year, n)
+trinity.drought.freq <- 
+  select(trinity.drought.freq, site_no, Year, n)
+westfork.flood.freq <- 
+  select(westfork.flood.freq, site_no, Year, n)
+westfork.drought.freq <- 
+  select(westfork.drought.freq, site_no, Year, n)
 
 # Make "Year" class numeric
-#trinity.flood.freq$Year <- as.numeric(trinity.flood.freq$Year)
-#trinity.drought.freq$Year <- as.numeric(trinity.drought.freq$Year)
-#westfork.flood.freq$Year <- as.numeric(westfork.flood.freq$Year)
-#westfork.drought.freq$Year <- as.numeric(westfork.drought.freq$Year)
+trinity.flood.freq$Year <- as.numeric(trinity.flood.freq$Year)
+trinity.drought.freq$Year <- as.numeric(trinity.drought.freq$Year)
+westfork.flood.freq$Year <- as.numeric(westfork.flood.freq$Year)
+westfork.drought.freq$Year <- as.numeric(westfork.drought.freq$Year)
+
+# Create all flood and all drought dataframes
+all.flood.data <- merge(trinity.flood.freq, westfork.flood.freq, all = TRUE)
+all.drought.data <- merge(trinity.drought.freq, westfork.drought.freq, all = TRUE)
+  # Delete this stuff??
 ```
 
-```{r include = FALSE}
-## Exploratory Graphs
-explore1 <- ggplot(NULL, aes(x = discharge.mean)) +
+New dataframes of flood/drought occurance by year are created for the analysis. The top and bottom quartiles are determined for each gauge, and the dataframe is further refined in order to create the most simple dataset possible for the analysis.
+
+```{r Exploratory, include = FALSE, warning=FALSE, include=FALSE}
+## Exploratory Graphsj
+Figure1 <- ggplot(NULL, aes(x = discharge.mean)) +
   geom_histogram(data = trinity.flow, fill = "red") +
   geom_histogram(data = westfork.flow, fill = "blue", alpha = 0.5) +
   ylim(0,1500) +
   xlim(0,20000)
  
-explore2 <- ggplot(all.flow.data) +
+Figure2 <- ggplot(all.flow.data) +
   geom_boxplot(aes(x = site_no, y = discharge.mean)) +
   ylim(0,2000)
 
-print(explore1)
-print(explore2)
+print(Figure1)
+print(Figure2)
 
-explore3 <- ggplot(trinity.flood.freq, aes(x = Year, y = freq)) +
+Figure3 <- ggplot(trinity.flood.freq, aes(x = Year, y = n)) +
   geom_point() +
   geom_smooth(method = lm) +
   ylab("Frequency") +
   ggtitle("Trinity River Flood Occurance") +
   theme(plot.title = element_text(size = 12))
 
-explore4 <- ggplot(trinity.drought.freq, aes(x = Year, y = freq)) +
+Figure4 <- ggplot(trinity.drought.freq, aes(x = Year, y = n)) +
   geom_point() +
   geom_smooth(method = lm, color = "red") +
   ylab("Frequency") +
   ggtitle("Trinity River Drought Occurance") +
   theme(plot.title = element_text(size = 12))
 
-explore5 <- ggplot(westfork.flood.freq, aes(x = Year, y = freq)) +
+Figure5 <- ggplot(westfork.flood.freq, aes(x = Year, y = n)) +
   geom_point() +
   geom_smooth(method = lm) +
   scale_y_continuous(limits = c(0,250)) +
@@ -311,7 +279,7 @@ explore5 <- ggplot(westfork.flood.freq, aes(x = Year, y = freq)) +
   ggtitle("West Fork Trinity River Flood Occurance") +
   theme(plot.title = element_text(size = 12))
 
-explore6 <- ggplot(westfork.drought.freq, aes(x = Year, y = freq)) +
+Figure6 <- ggplot(westfork.drought.freq, aes(x = Year, y = n)) +
   geom_point() +
   geom_smooth(method = lm, color = "red") +
   scale_y_continuous(limits = c(0,300)) +
@@ -319,94 +287,198 @@ explore6 <- ggplot(westfork.drought.freq, aes(x = Year, y = freq)) +
   ggtitle("West Fork Trinity River Drought Occurance") +
   theme(plot.title = element_text(size = 12)) 
 
-grid.arrange(explore3, explore4, explore5, explore6)
+grid.arrange(Figure3, Figure4, Figure5, Figure6)
+
 ```
 
-<Include text sections to accompany these R chunks to explain the reasoning behind your workflow, and the rationale for your approach.>
-
-
+The exploratory graphs help orient the data, and it confirms assumptions about the data, such as the tributary river having a similar trend in discharge over time, but at a less intense magnitude. It also reveals some unexpected trends that will be tested in the statistical analysis. In particular, it reveals the trend of decreasing "drought" days and slightly increasing "flood" days.
 
 \newpage
 
 # Analysis
-<Include R chunks for 3+ statistical tests (display code and output) and 3+ final visualization graphs (display graphs only).>
-```{r}
+```{r warning=FALSE, error=FALSE}
 # Run Man-Kendall test to test for monotonic relationship
-mk.test(trinity.flood.freq$freq)
+mk.test(trinity.flood.freq$n)
   # p < 0.05, trend present (z = +2.21)
-mk.test(trinity.drought.freq$freq)
+mk.test(trinity.drought.freq$n)
   # p < 0.05, trend present (z = -2.35)
-mk.test(westfork.flood.freq$freq)
+mk.test(westfork.flood.freq$n)
   # p < 0.05, trend present (z = +2.13)
-mk.test(westfork.drought.freq$freq)
+mk.test(westfork.drought.freq$n)
   # p < 0.05, trend present (z = -5.75)
 
 # Run Pettitt's test 
-pettitt.test(trinity.flood.freq$freq)
+pettitt.test(trinity.flood.freq$n)
   # Change point @ row 56 (1980)
-pettitt.test(trinity.drought.freq$freq)
+pettitt.test(trinity.drought.freq$n)
   # Change point @ row 40 (1964)
-pettitt.test(westfork.flood.freq$freq)
+pettitt.test(westfork.flood.freq$n)
   # Change point @ row 64 (1988)
-pettitt.test(westfork.drought.freq$freq)
+pettitt.test(westfork.drought.freq$n)
   # Change point @ row 39 (1964)
 
 # Run separate Man-Kendall for each change point
-mk.test(trinity.flood.freq$freq[1:55])
+mk.test(trinity.flood.freq$n[1:55])
   # p > 0.05, no trend
-mk.test(trinity.flood.freq$freq[56:95])
+mk.test(trinity.flood.freq$n[56:95])
   # p > 0.05, no trend
-mk.test(trinity.drought.freq$freq[1:39])
+mk.test(trinity.drought.freq$n[1:39])
   # p > 0.05, no trend
-mk.test(trinity.drought.freq$freq[40:61])
+mk.test(trinity.drought.freq$n[40:61])
   # p < 0.05, trend present (z = -2.09)
-mk.test(westfork.flood.freq$freq[1:63])
+mk.test(westfork.flood.freq$n[1:63])
   # p > 0.05, no trend
-mk.test(westfork.flood.freq$freq[64:95])
+mk.test(westfork.flood.freq$n[64:95])
   # p > 0.05, no trend
-mk.test(westfork.drought.freq$freq[1:38])
+mk.test(westfork.drought.freq$n[1:38])
   # p > 0.05, no trend
-mk.test(westfork.drought.freq$freq[39:66])
+mk.test(westfork.drought.freq$n[39:66])
   # P < 0.05, trend present (z = -3.42)
 
 # Test for second change point
-pettitt.test(trinity.drought.freq$freq[40:61])
+pettitt.test(trinity.drought.freq$n[40:61])
   # p > 0.05, no change point
-pettitt.test(westfork.drought.freq$freq[39:66])
+pettitt.test(westfork.drought.freq$n[39:66])
   # p < 0.05, change point @ row 44 (1969)
 
 # Second MK test for second change point
-mk.test(westfork.drought.freq$freq[39:43])
-mk.test(westfork.drought.freq$freq[44:66])
+mk.test(westfork.drought.freq$n[39:43])
+mk.test(westfork.drought.freq$n[44:66])
   # p > 0.05 for both, no trends
 
 # Run Spearman's Rho test (non-parametric)
-cor.test(trinity.flood.freq$freq, trinity.flood.freq$Year, 
+cor.test(trinity.flood.freq$n, trinity.flood.freq$Year, 
          method = "spearman", exact = FALSE)
  # p < 0.05 (0.02), rho = 0.238, weak correlation
-cor.test(trinity.drought.freq$freq, trinity.drought.freq$Year, 
+cor.test(trinity.drought.freq$n, trinity.drought.freq$Year, 
          method = "spearman", exact = FALSE)
  # p < 0.05 (0.02), rho = -0.295, weak correlation
-cor.test(westfork.flood.freq$freq, westfork.flood.freq$Year, 
+cor.test(westfork.flood.freq$n, westfork.flood.freq$Year, 
          method = "spearman", exact = FALSE)
   # p < 0.05 (0.04), rho = 0.214, weak correlation
-cor.test(westfork.drought.freq$freq, westfork.drought.freq$Year, 
+cor.test(westfork.drought.freq$n, westfork.drought.freq$Year, 
          method = "spearman", exact = FALSE)
   # p < 0.05 (3.2^-10), rho = -0.681, strong correlation
 ```
 
+First, a Mann_Kendall test was run to determine if the trends in discharge are monotonic. A Pettitt's test was then run on each dataset to see if there were any change points present, which could be indicative of increased river control and/or dramatic climatic changes. Because all four trends are monotonic, albeit weakly monotonic, a Spearman Rho's test was run to determine the strength of the correlation between the extreme hydrologic events and time. 
 
-```{r}
+```{r Visual, warning=FALSE, include=FALSE}
 # Visualization Graphs
 
-# 1. Trendline w/ break point floods 
-# 2. Trendline w/ break point droughts
-# 3. dot or violin plot? (to show similarity in frequnecy)
-  # OR plot post 1968 drought dot/violin to show that Trinity is more controlled
+# 1. Scatter plots of data with upper/lower 25% thresholds filled.
+Figure7 <- ggplot(trinity.raw, aes(x = datetime, y = discharge.mean)) +
+  geom_rect(xmin = as.Date("1925-01-01"), xmax = as.Date("2020-01-01"), 
+      ymin = 0, ymax = 250, fill = "darkgoldenrod", alpha = 0.75) +
+  geom_rect(xmin = as.Date("1925-01-01"), xmax = as.Date("2020-01-01"), 
+      ymin = 1580, ymax = 2000, fill = "dodgerblue3", alpha = 0.75) +
+  geom_point(color = "gray41", alpha = 0.2) +
+  scale_y_continuous(limits = c(0,2000)) +
+  geom_text(x = as.Date("2019-01-01"), y = 50,
+      label = "Drought", hjust = 1, fontface = "bold") +
+  geom_text(x = as.Date("2019-01-01"), y = 1950,
+      label = "Flood", hjust = 1, fontface = "bold") +
+  ylab(expression("Mean Discharge" ~ (ft^{3}/~"s"))) +
+  xlab("Year") +
+  ggtitle("Trinity River Mean Daily Discharge") +
+  theme(plot.title = element_text(size = 14))
+
+print(Figure7)
+
+Figure8 <- ggplot(westfork.raw, aes(x = datetime, y = discharge.mean)) +
+  geom_rect(xmin = as.Date("1925-01-01"), xmax = as.Date("2020-01-01"), 
+      ymin = 0, ymax = 115, fill = "darkgoldenrod", alpha = 0.75) +
+  geom_rect(xmin = as.Date("1925-01-01"), xmax = as.Date("2020-01-01"), 
+      ymin = 512.25, ymax = 750, fill = "dodgerblue3", alpha = 0.75) +
+  geom_point(color = "gray41", alpha = 0.2) +
+  scale_y_continuous(limits = c(0,750)) +
+  geom_text(x = as.Date("2019-01-01"), y = 50,
+      label = "Drought", hjust = 1, fontface = "bold") +
+  geom_text(x = as.Date("2019-01-01"), y = 725, 
+      label = "Flood", hjust = 1, fontface = "bold") +
+  ylab(expression("Mean Discharge" ~ (ft^{3}/~"s"))) +
+  xlab("Year") +
+  ggtitle("West Fork Trinity River Mean Daily Discharge") +
+  theme(plot.title = element_text(size = 12))
+
+print(Figure8)
+```
+Figures 1 and 2 visually dipict how  often the discharges of both rivers fall into the top and bottom quintiles, characterized as "Drought" for the bottom 25% and "Flood" for the top 25%. Both of the above figures were rescaled to better visualize the thresholds for flood and drought discharges for each river. 7,615 values above 2,000 were removed from Figure 2, and 6,645 values above 750 were removed from Figure 3.
+
+```{r warning=FALSE, include=FALSE}
+# Visualization graphs
+
+# 2. Trendline w/ break point floods 
+Figure9 <- ggplot(trinity.flood.freq, aes(x = Year, y = n)) +
+  geom_point(position = position_jitter(height = 0L, seed = 1L),
+      size = 0.5, color = "gray41", alpha = 0.25) +
+  geom_linerange(aes(x=Year, ymin = 0, ymax = n),
+      position = position_jitter(height = 0L, seed = 1L),
+      size = 1, color = "gray41", alpha = 0.5) +
+  geom_vline(xintercept = as.numeric("1980"),
+      color = "red3", lty = 5, size = 1, alpha = 0.75) +
+  geom_smooth(method = lm, se = F,
+      color = "dodgerblue3", alpha = 0.75) +
+  ylab("") +
+  xlab("") +
+  scale_y_continuous(limits = c(0,250), expand = c(0,0)) +
+  ggtitle("Trinity River Flood Occurance") +
+  theme(plot.title = element_text(size = 12))
+
+Figure10 <- ggplot(westfork.flood.freq, aes(x = Year, y = n)) +
+  geom_point(position = position_jitter(height = 0L, seed = 1L),
+      size = 0.5, color = "gray41", alpha = 0.25) +
+  geom_linerange(aes(x=Year, ymin = 0, ymax = n),
+      position = position_jitter(height = 0L, seed = 1L),
+      size = 1, color = "gray41", alpha = 0.5) +
+  geom_vline(xintercept = as.numeric("1988"),
+      color = "red3", lty = 5, size = 1, alpha = 0.75) +
+  geom_smooth(method = lm, se = F,
+      color = "dodgerblue3", alpha = 0.75) +
+  scale_y_continuous(limits = c(0,250), expand = c(0,0)) +
+  ylab("Frequency") +
+  ggtitle("West Fork Trinity River Flood Occurance") +
+  theme(plot.title = element_text(size = 12))
+
+grid.arrange(Figure9, Figure10)
+
+# 3. Trendline w/ break point droughts
+Figure11 <- ggplot(trinity.drought.freq, aes(x = Year, y = n)) +
+  geom_point(position = position_jitter(height = 0L, seed = 1L),
+      size = 0.5, color = "gray41", alpha = 0.25) +
+  geom_linerange(aes(x=Year, ymin = 0, ymax = n),
+      position = position_jitter(height = 0L, seed = 1L),
+      size = 1, color = "gray41", alpha = 0.5) +
+  geom_vline(xintercept = as.numeric("1964"),
+      color = "red3", lty = 5, size = 1, alpha = 0.75) +
+  geom_smooth(method = lm, se = F,
+      color = "darkgoldenrod", alpha = 0.75) +
+  ylab("") +
+  xlab("") +
+  scale_y_continuous(limits = c(0,250), expand = c(0,0)) +
+  ggtitle("Trinity River Drought Occurance") +
+  theme(plot.title = element_text(size = 12))
+
+Figure12 <- ggplot(westfork.drought.freq, aes(x = Year, y = n)) +
+  geom_point(position = position_jitter(height = 0L, seed = 1L),
+      size = 0.5, color = "gray41", alpha = 0.25) +
+  geom_linerange(aes(x=Year, ymin = 0, ymax = n),
+      position = position_jitter(height = 0L, seed = 1L),
+      size = 1, color = "gray41", alpha = 0.5) +
+  geom_vline(xintercept = as.numeric("1964"),
+      color = "red3", lty = 5, size = 1, alpha = 0.75) +
+  geom_smooth(method = lm, se = F,
+      color = "darkgoldenrod", alpha = 0.75) +
+  scale_y_continuous(limits = c(0,250), expand = c(0,0)) +
+  scale_x_continuous(limits = c(1925,2019)) +
+  ylab("Frequency") +
+  ggtitle("West Fork Trinity River Drought Occurance") +
+  theme(plot.title = element_text(size = 12))
+
+grid.arrange(Figure11, Figure12)
 ```
 
-<Include text sections to accompany these R chunks to explain the reasoning behind your workflow, rationale for your approach, and the justification of meeting or failing to meet assumptions of tests.>
-
+Figures 3 and 4 drive home the main takeaway from the analysis- "drought" discharges have decreased, and "flood" discharges have slightly increased over time in the Dallas area. Red dashed lines indicate change points, which provide additional information about when infrastructural or climatic changes began to really affect the surface water hydrology of the Dallas area.
 
 \newpage
 
