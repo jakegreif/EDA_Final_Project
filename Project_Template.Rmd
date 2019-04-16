@@ -5,17 +5,13 @@ output:
     fig_caption: yes
     number_sections: yes
 geometry: margin=2.54cm
-title: Experiment Title
-subtitle: Web address for GitHub repository
-author: Your Name
+title: An Analysis of Extreme Hydrologic Trends in Dallas, Texas
+subtitle: https://github.com/jakegreif/EDA_Final_Project
+author: Jake Greif
 abstract: Across the country, the expected effects of climate change are being realized in the form of more intense precipitation events and dry periods. In North Texas, the city of Dallas is familiar with both types of extreme hydrologic events, and it has experienced particularly intense events in recent years. An analysis was conducted to determine if floods and droughts, defined as the top and bottom quartiles of daily average discharge, repsectively, have become more frequent in the Trinity River and a tributary near Dallas, TX. The results show that drought discharges have decreased, and flood discharges have slightly increased over time in the Dallas area, and that extreme discharge trends in a larger, more regulated river like the Trinity River are less intense than a lower order tributary.
 fontsize: 12pt
 mainfont: Times New Roman
-editor_options: 
-  chunk_output_type: console
 ---
-
-<Information in these brackets are used for annotating the RMarkdown file. They will not appear in the final version of the PDF document>
 
 \newpage
 \tableofcontents 
@@ -26,10 +22,9 @@ editor_options:
 \newpage
 
 ```{r include=FALSE}
-#knitr::opts_chunk$set(fig.cap = "", fig.path = "Plot")
+knitr::opts_chunk$set(fig.cap = TRUE, fig.path = "Plot")
 ```
 
-<Note: set up autoreferencing for figures and tables in your document>
 
 ```{r setup, include=FALSE, warning=FALSE}
 # Set your working directory
@@ -234,10 +229,6 @@ trinity.drought.freq$Year <- as.numeric(trinity.drought.freq$Year)
 westfork.flood.freq$Year <- as.numeric(westfork.flood.freq$Year)
 westfork.drought.freq$Year <- as.numeric(westfork.drought.freq$Year)
 
-# Create all flood and all drought dataframes
-all.flood.data <- merge(trinity.flood.freq, westfork.flood.freq, all = TRUE)
-all.drought.data <- merge(trinity.drought.freq, westfork.drought.freq, all = TRUE)
-  # Delete this stuff??
 ```
 
 New dataframes of flood/drought occurance by year are created for the analysis. The top and bottom quartiles are determined for each gauge, and the dataframe is further refined in order to create the most simple dataset possible for the analysis.
